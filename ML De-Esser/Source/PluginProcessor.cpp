@@ -9,6 +9,26 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+
+juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout() {
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID("HCF_CUTOFF", 1), "HCF Cutoff",
+        juce::NormalisableRange<float>(1000.0f, 20000.0f, 1.0f, 0.3f), 10000.0f
+    ));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID("GAIN_RED", 1), "Gain Reduction", 0.0f, 48.0f, 0.0f
+    ));
+
+    layout.add(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID("PROCESS_ON", 1), "Processing Enabled", true
+    ));
+
+    return layout;
+}
+
 //==============================================================================
 MLDeEsserAudioProcessor::MLDeEsserAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -19,9 +39,13 @@ MLDeEsserAudioProcessor::MLDeEsserAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
 #endif
+    apvts(*this, nullptr, "Parameters", createParameterLayout())
 {
+    cutoffParameter = apvts.getRawParameterValue("HCF_CUTOFF");
+    gainParamater = apvts.getRawParameterValue("GAIN_RED");
+    enabledParameter = apvts.getRawParameterValue("PROCESS_ON");
 }
 
 MLDeEsserAudioProcessor::~MLDeEsserAudioProcessor()
@@ -95,6 +119,16 @@ void MLDeEsserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getTotalNumOutputChannels();
+
+    highCutFilter.prepare(spec);
+
+    *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, 10000.0f);
+
 }
 
 void MLDeEsserAudioProcessor::releaseResources()
@@ -150,12 +184,25 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
+    if (enabledParameter->load() > 0.5f) {
+        *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), cutoffParameter->load());
 
-        // ..do something to the data...
+        juce::dsp::AudioBlock<float> audioBlock(buffer);
+        juce::dsp::ProcessContextReplacing<float> context(audioBlock);
+
+        highCutFilter.process(context);
+
+        float gainMultiplier = juce::Decibels::decibelsToGain(-gainParamater->load());
+
+        for (int channel = 0; channel < totalNumInputChannels; ++channel) {
+            auto* channelData = buffer.getWritePointer(channel);
+
+            for (int sample = 0; sample < buffer.getNumSamples(); ++sample) {
+                channelData[sample] *= gainMultiplier;
+            }
+        }
     }
+
 }
 
 //==============================================================================

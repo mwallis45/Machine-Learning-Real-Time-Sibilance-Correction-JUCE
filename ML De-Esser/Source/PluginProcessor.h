@@ -56,7 +56,25 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
+
 private:
+
+    juce::AudioProcessorValueTreeState apvts;
+
+    std::atomic<float>* cutoffParameter = nullptr;
+    std::atomic<float>* gainParamater = nullptr;
+    std::atomic<float>* enabledParameter = nullptr;
+
+    float highCutCutoff{ 10000.0f };
+    float gainReduction{ 0.0f };
+    bool isProcessingEnabled{ true };
+
+    using FilterType = juce::dsp::IIR::Filter<float>;
+    using FilterCoefs = juce::dsp::IIR::Coefficients<float>;
+
+    juce::dsp::ProcessorDuplicator<FilterType, FilterCoefs> highCutFilter;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MLDeEsserAudioProcessor)
 };
