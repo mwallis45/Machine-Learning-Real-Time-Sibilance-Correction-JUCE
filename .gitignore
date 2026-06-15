@@ -1,0 +1,11 @@
+# Block Visual Studio hidden caching folders
+**/.vs/
+
+# Block the entire JUCE build output directory
+**/Builds/
+
+# Block common VS lock files and index files
+*.vsidx
+*.suo
+*.user
+*.db

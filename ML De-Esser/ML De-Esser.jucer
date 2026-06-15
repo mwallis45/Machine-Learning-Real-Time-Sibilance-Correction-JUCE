@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="IVdOTt" name="ML De-Esser" projectType="araaudioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Michael Wallis"
+              companyEmail="ec25253@qmul.ac.uk" pluginFormats="buildAAX,buildAU,buildStandalone,buildVST3"
+              pluginCode="mlds" pluginVST3Category="Fx,Mono" pluginAAXCategory="8192"
+              cppLanguageStandard="latest" userNotes="Build for Masters Project at Queen Mary University of London."
+              version="1.0.0">
+  <MAINGROUP id="JsDeJO" name="ML De-Esser">
+    <GROUP id="{FBCB2599-2C32-4017-1C3E-4F727908C4C0}" name="Source">
+      <FILE id="HJPE5c" name="PluginProcessor.cpp" compile="1" resource="0"
+            file="Source/PluginProcessor.cpp"/>
+      <FILE id="SJhJJ9" name="PluginProcessor.h" compile="0" resource="0"
+            file="Source/PluginProcessor.h"/>
+      <FILE id="Lt9JfJ" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="G6XFmS" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="ykR7rL" name="PluginARADocumentController.cpp" compile="1"
+            resource="0" file="Source/PluginARADocumentController.cpp"/>
+      <FILE id="gxNbzs" name="PluginARADocumentController.h" compile="0"
+            resource="0" file="Source/PluginARADocumentController.h"/>
+      <FILE id="qmC0Y1" name="PluginARAPlaybackRenderer.cpp" compile="1"
+            resource="0" file="Source/PluginARAPlaybackRenderer.cpp"/>
+      <FILE id="HJcThy" name="PluginARAPlaybackRenderer.h" compile="0" resource="0"
+            file="Source/PluginARAPlaybackRenderer.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors_headless" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
+  <EXPORTFORMATS>
+    <VS2026 targetFolder="Builds/VisualStudio2026">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="ML De-Esser"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="ML De-Esser"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../../../JUCE/modules"/>
+      </MODULEPATHS>
+    </VS2026>
+  </EXPORTFORMATS>
+</JUCERPROJECT>
