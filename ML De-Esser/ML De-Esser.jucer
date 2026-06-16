@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IVdOTt" name="ML De-Esser" projectType="araaudioplug" useAppConfig="0"
+<JUCERPROJECT id="IVdOTt" name="ML De-Esser" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Michael Wallis"
               companyEmail="ec25253@qmul.ac.uk" pluginFormats="buildAAX,buildAU,buildStandalone,buildVST3"
               pluginCode="mlds" pluginVST3Category="Fx,Mono" pluginAAXCategory="8192"
@@ -15,14 +15,6 @@
       <FILE id="Lt9JfJ" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="G6XFmS" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
-      <FILE id="ykR7rL" name="PluginARADocumentController.cpp" compile="1"
-            resource="0" file="Source/PluginARADocumentController.cpp"/>
-      <FILE id="gxNbzs" name="PluginARADocumentController.h" compile="0"
-            resource="0" file="Source/PluginARADocumentController.h"/>
-      <FILE id="qmC0Y1" name="PluginARAPlaybackRenderer.cpp" compile="1"
-            resource="0" file="Source/PluginARAPlaybackRenderer.cpp"/>
-      <FILE id="HJcThy" name="PluginARAPlaybackRenderer.h" compile="0" resource="0"
-            file="Source/PluginARAPlaybackRenderer.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>
@@ -49,6 +41,7 @@
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="ML De-Esser"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="ML De-Esser"/>
+        <CONFIGURATION isDebug="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../../../../JUCE/modules"/>
@@ -67,5 +60,27 @@
         <MODULEPATH id="juce_dsp" path="../../../../../JUCE/modules"/>
       </MODULEPATHS>
     </VS2026>
+    <VS2022 targetFolder="Builds/VisualStudio2022">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_audio_devices" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_audio_formats" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_audio_processors" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_audio_utils" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_core" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_data_structures" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_dsp" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_events" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_graphics" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_gui_basics" path="C:\Users\Michael\Documents\JUCE\modules"/>
+        <MODULEPATH id="juce_gui_extra" path="C:\Users\Michael\Documents\JUCE\modules"/>
+      </MODULEPATHS>
+    </VS2022>
   </EXPORTFORMATS>
 </JUCERPROJECT>
