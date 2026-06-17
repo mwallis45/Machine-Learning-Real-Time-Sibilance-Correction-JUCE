@@ -46,6 +46,11 @@ MLDeEsserAudioProcessor::MLDeEsserAudioProcessor()
     cutoffParameter = apvts.getRawParameterValue("HCF_CUTOFF");
     gainParamater = apvts.getRawParameterValue("GAIN_RED");
     enabledParameter = apvts.getRawParameterValue("PROCESS_ON");
+
+    neuralModel = std::make_unique<ModelType>();
+    inputAllocationBlock.resize(input_dim, 0.0f);
+
+    loadModelWeights();
 }
 
 MLDeEsserAudioProcessor::~MLDeEsserAudioProcessor()
@@ -120,6 +125,8 @@ void MLDeEsserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
 
+    // DSP Pre processing
+
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
@@ -128,6 +135,26 @@ void MLDeEsserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     highCutFilter.prepare(spec);
 
     *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, 10000.0f);
+
+    // NN Pre processing
+
+    inputFifoBuffer.setSize(1, modelWindowSize);
+    inputFifoBuffer.clear();
+    fifoWriteIndex = 0;
+    samplesSinceLastHop = 0;
+    std::fill(inputAllocationBlock.begin(), inputAllocationBlock.end(), 0.0f); // std::fill(modelInputVector.begin(), modelInputVector.end(), 0.0f);
+
+    delayLineBuffer.setSize(getTotalNumOutputChannels(), delayLengthSamples);
+    delayLineBuffer.clear();
+    delayWriteIndex = 0;
+
+    setLatencySamples(delayLengthSamples);
+
+    if (neuralModel != nullptr) {
+        neuralModel->reset();
+    }
+
+    // classifier.reset();
 
 }
 
@@ -163,6 +190,50 @@ bool MLDeEsserAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 }
 #endif
 
+
+void MLDeEsserAudioProcessor::loadModelWeights()
+{
+
+    if (BinaryData::model_json != nullptr && BinaryData::model_jsonSize > 0)
+    {
+        // nlohmann::json can natively parse raw string/char pointers
+        nlohmann::json state_dict = nlohmann::json::parse(
+            BinaryData::model_json,
+            BinaryData::model_json + BinaryData::model_jsonSize
+        );
+
+        using namespace RTNeural::torch_helpers;
+        loadDense<float>(state_dict, "fc1.", neuralModel->get<0>());
+        loadDense<float>(state_dict, "fc2.", neuralModel->get<2>());
+        loadDense<float>(state_dict, "fc3.", neuralModel->get<4>());
+    }
+    else
+    {
+        jassertfalse; // Execution drops here if the file wasn't bundled properly
+    }
+}
+
+void MLDeEsserAudioProcessor::runInference(const float* sampleBlock)
+{
+
+    neuralModel->forward(sampleBlock);
+    const float* outputProbs = neuralModel->getOutputs();
+    int bestClass = 0;
+    float maxProb = -1.0f;
+
+    for (int i = 0; i < num_classes; ++i)
+    {
+        if (outputProbs[i] > maxProb)
+        {
+            maxProb = outputProbs[i];
+            bestClass = i;
+        }
+    }
+    predictedClassIndex.store(bestClass, std::memory_order_relaxed);
+
+}
+
+
 void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -184,23 +255,65 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    if (enabledParameter->load() > 0.5f) {
-        *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), cutoffParameter->load());
 
-        juce::dsp::AudioBlock<float> audioBlock(buffer);
-        juce::dsp::ProcessContextReplacing<float> context(audioBlock);
+    int numSamples = buffer.getNumSamples();
 
-        highCutFilter.process(context);
+    for (int sample = 0; sample < numSamples; ++sample) {
+        float incomingSample = buffer.getSample(0, sample);
 
-        float gainMultiplier = juce::Decibels::decibelsToGain(-gainParamater->load());
+        inputFifoBuffer.setSample(0, fifoWriteIndex, incomingSample);
+        fifoWriteIndex = (fifoWriteIndex + 1) % modelWindowSize;
+
+        samplesSinceLastHop++;
+
+        if (samplesSinceLastHop >= hopSize) {
+            samplesSinceLastHop = 0;
+
+            int readIdx = fifoWriteIndex;
+            for (int i = 0; i < modelWindowSize; ++i) {
+                inputAllocationBlock[i] = inputFifoBuffer.getSample(0, readIdx);
+                readIdx = (readIdx + 1) % modelWindowSize;
+            }
+
+            runInference(inputAllocationBlock.data());
+
+        }
+
+        int currentClass = predictedClassIndex.load(std::memory_order_relaxed);
+        bool isSibilantSound = (currentClass == 20 || currentClass == 27 || currentClass == 31 || currentClass == 40 || currentClass == 41 || currentClass == 42 || currentClass == 43 || currentClass == 49);
+
+        bool isPluginEnabled = (enabledParameter->load() > 0.5f);
+        bool shouldProcess = isPluginEnabled && isSibilantSound; // bool shouldProcess = (enabledParameter->load() > 0.5f);
 
         for (int channel = 0; channel < totalNumInputChannels; ++channel) {
-            auto* channelData = buffer.getWritePointer(channel);
+            float liveSample = buffer.getSample(channel, sample);
+            float delayedSample = delayLineBuffer.getSample(channel, delayWriteIndex);
+            delayLineBuffer.setSample(channel, delayWriteIndex, liveSample);
 
-            for (int sample = 0; sample < buffer.getNumSamples(); ++sample) {
-                channelData[sample] *= gainMultiplier;
+            if (shouldProcess) {
+                float gainMultiplier = juce::Decibels::decibelsToGain(-gainParamater->load());
+                delayedSample *= gainMultiplier;
             }
+
+            buffer.setSample(channel, sample, delayedSample);
+
         }
+
+        delayWriteIndex = (delayWriteIndex + 1) % delayLengthSamples;
+
+    }
+
+    bool lastSampleActive = (enabledParameter->load() > 0.5f) &&
+        [this]() {
+        int c = predictedClassIndex.load(std::memory_order_relaxed);
+        return (c == 20 || c == 27 || c == 31 || c == 40 || c == 41 || c == 42 || c == 43 || c == 49); // Must match your target classes above
+        }();
+
+    if (lastSampleActive) {
+        *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), cutoffParameter->load());
+        juce::dsp::AudioBlock<float> audioBlock(buffer);
+        juce::dsp::ProcessContextReplacing<float> context(audioBlock);
+        highCutFilter.process(context);
     }
 
 }
