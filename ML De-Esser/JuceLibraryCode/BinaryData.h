@@ -11,8 +11,11 @@ namespace BinaryData
     extern const char*   model_json;
     const int            model_jsonSize = 6461894;
 
+    extern const char*   model_csd_json;
+    const int            model_csd_jsonSize = 6461869;
+
     // Number of elements in the namedResourceList and originalFileNames arrays.
-    const int namedResourceListSize = 1;
+    const int namedResourceListSize = 2;
 
     // Points to the start of a list of resource names.
     extern const char* namedResourceList[];

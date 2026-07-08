@@ -9,6 +9,7 @@
   <MAINGROUP id="JsDeJO" name="ML De-Esser">
     <GROUP id="{638F1C8C-3F12-E522-7C73-185EF48F09AD}" name="resources">
       <FILE id="mcZDKm" name="model.json" compile="0" resource="1" file="resources/model.json"/>
+      <FILE id="f6b2eM" name="model_csd.json" compile="0" resource="1" file="resources/model_csd.json"/>
     </GROUP>
     <GROUP id="{FBCB2599-2C32-4017-1C3E-4F727908C4C0}" name="Source">
       <FILE id="HJPE5c" name="PluginProcessor.cpp" compile="1" resource="0"

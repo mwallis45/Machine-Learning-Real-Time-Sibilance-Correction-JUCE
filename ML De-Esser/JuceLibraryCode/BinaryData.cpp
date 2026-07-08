@@ -76949,6 +76949,12 @@ static const unsigned char temp_binary_data_0[] =
 
 const char* model_json = (const char*) temp_binary_data_0;
 
+}
+
+#include "BinaryData.h"
+
+namespace BinaryData
+{
 
 const char* getNamedResource (const char* resourceNameUTF8, int& numBytes);
 const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
@@ -76962,6 +76968,7 @@ const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
     switch (hash)
     {
         case 0x7d743c3e:  numBytes = 6461894; return model_json;
+        case 0x09d0f0a9:  numBytes = 6461869; return model_csd_json;
         default: break;
     }
 
@@ -76971,12 +76978,14 @@ const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
 
 const char* namedResourceList[] =
 {
-    "model_json"
+    "model_json",
+    "model_csd_json"
 };
 
 const char* originalFilenames[] =
 {
-    "model.json"
+    "model.json",
+    "model_csd.json"
 };
 
 const char* getNamedResourceOriginalFilename (const char* resourceNameUTF8);

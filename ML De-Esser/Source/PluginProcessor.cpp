@@ -136,6 +136,9 @@ void MLDeEsserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
     *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, 10000.0f);
 
+    smoothedGain.reset(50); // Set to 50 samples
+    smoothedGain.setCurrentAndTargetValue(1.0f);
+
     // NN Pre processing
 
     inputFifoBuffer.setSize(1, modelWindowSize);
@@ -144,7 +147,7 @@ void MLDeEsserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     samplesSinceLastHop = 0;
     std::fill(inputAllocationBlock.begin(), inputAllocationBlock.end(), 0.0f); // std::fill(modelInputVector.begin(), modelInputVector.end(), 0.0f);
 
-    delayLineBuffer.setSize(getTotalNumOutputChannels(), delayLengthSamples);
+    delayLineBuffer.setSize(getTotalNumOutputChannels(), delayLengthSamples / 2);
     delayLineBuffer.clear();
     delayWriteIndex = 0;
 
@@ -197,9 +200,14 @@ void MLDeEsserAudioProcessor::loadModelWeights()
     if (BinaryData::model_json != nullptr && BinaryData::model_jsonSize > 0)
     {
         // nlohmann::json can natively parse raw string/char pointers
-        nlohmann::json state_dict = nlohmann::json::parse(
+        /*nlohmann::json state_dict = nlohmann::json::parse(
             BinaryData::model_json,
             BinaryData::model_json + BinaryData::model_jsonSize
+        );*/
+
+        nlohmann::json state_dict = nlohmann::json::parse(
+            BinaryData::model_csd_json,
+            BinaryData::model_csd_json + BinaryData::model_csd_jsonSize
         );
 
         using namespace RTNeural::torch_helpers;
@@ -285,15 +293,20 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         bool isPluginEnabled = (enabledParameter->load() > 0.5f);
         bool shouldProcess = isPluginEnabled && isSibilantSound; // bool shouldProcess = (enabledParameter->load() > 0.5f);
 
+        float targetGain = 1.0f;
+        if (shouldProcess) {
+            targetGain = juce::Decibels::decibelsToGain(-gainParamater->load());
+        }
+        smoothedGain.setTargetValue(targetGain);
+        float currentGain = smoothedGain.getNextValue();
+
         for (int channel = 0; channel < totalNumInputChannels; ++channel) {
             float liveSample = buffer.getSample(channel, sample);
             float delayedSample = delayLineBuffer.getSample(channel, delayWriteIndex);
             delayLineBuffer.setSample(channel, delayWriteIndex, liveSample);
 
-            if (shouldProcess) {
-                float gainMultiplier = juce::Decibels::decibelsToGain(-gainParamater->load());
-                delayedSample *= gainMultiplier;
-            }
+
+            delayedSample *= currentGain;
 
             buffer.setSample(channel, sample, delayedSample);
 

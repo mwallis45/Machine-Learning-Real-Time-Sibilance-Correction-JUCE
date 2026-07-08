@@ -109,6 +109,8 @@ private:
     using FilterType = juce::dsp::IIR::Filter<float>;
     using FilterCoefs = juce::dsp::IIR::Coefficients<float>;
 
+    juce::LinearSmoothedValue<float> smoothedGain{ 1.0f };
+
     // NN privates
 
     static constexpr int modelWindowSize = 512;
