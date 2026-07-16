@@ -13,35 +13,35 @@
 #include <cmath>
 
 
-template <typename T, int size>
-class GeluActivationT
-{
-public:
-    static constexpr auto in_size = size;
-    static constexpr auto out_size = size;
-
-    GeluActivationT() = default;
-
-    std::string getName() const noexcept { return "gelu"; }
-    constexpr bool isActivation() const noexcept { return true; }
-    RTNEURAL_REALTIME void reset() {}
-
-    RTNEURAL_REALTIME inline void forward(const T(&ins)[size]) noexcept
-    {
-        constexpr T sqrt_2_over_pi = (T)0.7978845608; // sqrt(2 / pi)
-
-        for (int i = 0; i < size; ++i)
-        {
-            const T x = ins[i];
-            // Fast Tanh Gelu Approximation Formula
-            const T intermediate = sqrt_2_over_pi * (x + (T)0.044715 * x * x * x);
-            outs[i] = (T)0.5 * x * ((T)1.0 + std::tanh(intermediate));
-        }
-    }
-
-    // Allocate internal output storage matching RTNeural's memory alignments
-    T outs alignas(RTNEURAL_DEFAULT_ALIGNMENT)[size];
-};
+//template <typename T, int size>
+//class GeluActivationT
+//{
+//public:
+//    static constexpr auto in_size = size;
+//    static constexpr auto out_size = size;
+//
+//    GeluActivationT() = default;
+//
+//    std::string getName() const noexcept { return "gelu"; }
+//    constexpr bool isActivation() const noexcept { return true; }
+//    RTNEURAL_REALTIME void reset() {}
+//
+//    RTNEURAL_REALTIME inline void forward(const T(&ins)[size]) noexcept
+//    {
+//        constexpr T sqrt_2_over_pi = (T)0.7978845608; // sqrt(2 / pi)
+//
+//        for (int i = 0; i < size; ++i)
+//        {
+//            const T x = ins[i];
+//            // Fast Tanh Gelu Approximation Formula
+//            const T intermediate = sqrt_2_over_pi * (x + (T)0.044715 * x * x * x);
+//            outs[i] = (T)0.5 * x * ((T)1.0 + std::tanh(intermediate));
+//        }
+//    }
+//
+//    // Allocate internal output storage matching RTNeural's memory alignments
+//    T outs alignas(RTNEURAL_DEFAULT_ALIGNMENT)[size];
+//};
 
 
 //==============================================================================
@@ -116,8 +116,6 @@ private:
     static constexpr int modelWindowSize = 512;
     static constexpr int hopSize = 128;
 
-    
-
     juce::AudioBuffer<float> inputFifoBuffer; // juce::AudioDataConverters::GenericBuffer<float> fifoBuffer;
     int fifoWriteIndex = 0; // int fifoIndex = 0;
     int samplesSinceLastHop = 0;
@@ -132,14 +130,16 @@ private:
     static constexpr int hidden_dim = 512;
     static constexpr int num_classes = 51;
 
-    using GeluHidden = GeluActivationT<float, hidden_dim>;
-    using GeluClasses = GeluActivationT<float, num_classes>;
+    // using GeluHidden = GeluActivationT<float, hidden_dim>;
+    // using GeluClasses = GeluActivationT<float, num_classes>;
 
     using ModelType = RTNeural::ModelT<float, input_dim, num_classes,
         RTNeural::DenseT<float, input_dim, hidden_dim>,
-        GeluHidden,
+        RTNeural::ReLuActivationT<float, hidden_dim>,
+        // GeluHidden,
         RTNeural::DenseT<float, hidden_dim, num_classes>,
-        GeluClasses,
+        RTNeural::ReLuActivationT<float, num_classes>,
+        // GeluClasses,
         RTNeural::DenseT<float, num_classes, num_classes>,
         RTNeural::SoftmaxActivationT<float, num_classes>
     >;
