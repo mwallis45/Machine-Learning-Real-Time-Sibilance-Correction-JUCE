@@ -199,16 +199,63 @@ void MLDeEsserAudioProcessor::loadModelWeights()
 
     if (BinaryData::model_json != nullptr && BinaryData::model_jsonSize > 0)
     {
-        // nlohmann::json can natively parse raw string/char pointers
-        /*nlohmann::json state_dict = nlohmann::json::parse(
-            BinaryData::model_json,
-            BinaryData::model_json + BinaryData::model_jsonSize
-        );*/
+        nlohmann::json state_dict = nullptr;
 
-        nlohmann::json state_dict = nlohmann::json::parse(
-            BinaryData::model_csd_json,
-            BinaryData::model_csd_json + BinaryData::model_csd_jsonSize
-        );
+        // 2 class
+        if (true) {
+            nlohmann::json state_dict = nlohmann::json::parse(
+                BinaryData::two_model_json,
+                BinaryData::two_model_json + BinaryData::two_model_jsonSize
+            );
+        }
+
+        // 3 class
+        if (true) {
+            nlohmann::json state_dict = nlohmann::json::parse(
+                BinaryData::three_model_json,
+                BinaryData::three_model_json + BinaryData::three_model_jsonSize
+            );
+        }
+
+        // 5 class
+        if (true) {
+            nlohmann::json state_dict = nlohmann::json::parse(
+                BinaryData::five_model_json,
+                BinaryData::five_model_json + BinaryData::five_model_jsonSize
+            );
+        }
+
+        // 9 class
+        if (true) {
+            nlohmann::json state_dict = nlohmann::json::parse(
+                BinaryData::nine_model_json,
+                BinaryData::nine_model_json + BinaryData::nine_model_jsonSize
+            );
+        }
+
+        // 51 class
+        if (true) {
+            nlohmann::json state_dict = nlohmann::json::parse(
+                BinaryData::all_model_json,
+                BinaryData::all_model_json + BinaryData::all_model_jsonSize
+            );
+        }
+
+        // csd 44100
+        if (true) {
+            nlohmann::json state_dict = nlohmann::json::parse(
+                BinaryData::csd_high_model_json,
+                BinaryData::csd_high_model_json + BinaryData::csd_high_model_jsonSize
+            );
+        }
+
+        // csd 16000
+        if (true) {
+            nlohmann::json state_dict = nlohmann::json::parse(
+                BinaryData::csd_low_model_json,
+                BinaryData::csd_low_model_json + BinaryData::csd_low_model_jsonSize
+            );
+        }
 
         using namespace RTNeural::torch_helpers;
         loadDense<float>(state_dict, "fc1.", neuralModel->get<0>());

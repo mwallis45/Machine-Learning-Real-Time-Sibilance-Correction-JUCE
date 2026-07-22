@@ -8,6 +8,27 @@
 
 namespace BinaryData
 {
+    extern const char*   _2_model_json;
+    const int            _2_model_jsonSize = 8765472;
+
+    extern const char*   _3_model_json;
+    const int            _3_model_jsonSize = 8765053;
+
+    extern const char*   _5_model_json;
+    const int            _5_model_jsonSize = 8680122;
+
+    extern const char*   _9_model_json;
+    const int            _9_model_jsonSize = 8733404;
+
+    extern const char*   _51_model_json;
+    const int            _51_model_jsonSize = 8919468;
+
+    extern const char*   csd_16000_model_json;
+    const int            csd_16000_model_jsonSize = 8808000;
+
+    extern const char*   csd_44100_model_json;
+    const int            csd_44100_model_jsonSize = 8984885;
+
     extern const char*   model_json;
     const int            model_jsonSize = 6461894;
 
@@ -15,7 +36,7 @@ namespace BinaryData
     const int            model_csd_jsonSize = 6461869;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
-    const int namedResourceListSize = 2;
+    const int namedResourceListSize = 9;
 
     // Points to the start of a list of resource names.
     extern const char* namedResourceList[];
