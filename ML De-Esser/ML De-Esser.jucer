@@ -8,15 +8,16 @@
               version="1.0.0">
   <MAINGROUP id="JsDeJO" name="ML De-Esser">
     <GROUP id="{638F1C8C-3F12-E522-7C73-185EF48F09AD}" name="resources">
-      <FILE id="OClULx" name="2_model.json" compile="0" resource="1" file="resources/2_model.json"/>
-      <FILE id="wFaFq7" name="3_model.json" compile="0" resource="1" file="resources/3_model.json"/>
-      <FILE id="aUPgRz" name="5_model.json" compile="0" resource="1" file="resources/5_model.json"/>
-      <FILE id="r9A475" name="9_model.json" compile="0" resource="1" file="resources/9_model.json"/>
-      <FILE id="zoqVIT" name="51_model.json" compile="0" resource="1" file="resources/51_model.json"/>
-      <FILE id="BY928j" name="csd_16000_model.json" compile="0" resource="1"
-            file="resources/csd_16000_model.json"/>
-      <FILE id="YQ8fGc" name="csd_44100_model.json" compile="0" resource="1"
-            file="resources/csd_44100_model.json"/>
+      <FILE id="OClULx" name="two_model.json" compile="0" resource="1" file="resources/two_model.json"/>
+      <FILE id="wFaFq7" name="three_model.json" compile="0" resource="1"
+            file="resources/three_model.json"/>
+      <FILE id="aUPgRz" name="five_model.json" compile="0" resource="1" file="resources/five_model.json"/>
+      <FILE id="r9A475" name="nine_model.json" compile="0" resource="1" file="resources/nine_model.json"/>
+      <FILE id="zoqVIT" name="all_model.json" compile="0" resource="1" file="resources/all_model.json"/>
+      <FILE id="BY928j" name="csd_low_model.json" compile="0" resource="1"
+            file="resources/csd_low_model.json"/>
+      <FILE id="YQ8fGc" name="csd_high_model.json" compile="0" resource="1"
+            file="resources/csd_high_model.json"/>
       <FILE id="mcZDKm" name="model.json" compile="0" resource="1" file="resources/model.json"/>
       <FILE id="f6b2eM" name="model_csd.json" compile="0" resource="1" file="resources/model_csd.json"/>
     </GROUP>

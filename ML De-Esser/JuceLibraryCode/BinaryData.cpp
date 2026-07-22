@@ -9,7 +9,7 @@
 namespace BinaryData
 {
 
-//================== 2_model.json ==================
+//================== two_model.json ==================
 static const unsigned char temp_binary_data_0[] =
 { 123,34,102,99,49,46,119,101,105,103,104,116,34,58,32,91,91,45,49,46,55,52,50,57,57,51,57,53,48,56,52,51,56,49,49,44,32,45,49,46,51,52,55,49,56,49,54,55,55,56,49,56,50,57,56,51,44,32,45,49,46,49,48,56,53,49,55,56,56,53,50,48,56,49,50,57,57,44,32,45,48,
 46,54,49,53,56,53,53,49,53,55,51,55,53,51,51,53,55,44,32,45,48,46,49,50,51,49,57,53,51,50,48,51,54,55,56,49,51,49,49,44,32,45,48,46,49,50,48,55,53,49,52,51,51,48,55,52,52,55,52,51,51,44,32,48,46,51,50,50,57,57,56,54,49,51,49,49,57,49,50,53,51,55,44,32,
@@ -104367,7 +104367,7 @@ static const unsigned char temp_binary_data_0[] =
 54,56,57,56,50,50,52,51,53,51,56,44,32,48,46,48,57,48,54,56,48,56,53,50,53,51,50,51,56,54,55,56,93,93,44,32,34,102,99,52,46,98,105,97,115,34,58,32,91,48,46,52,49,56,49,54,54,54,48,55,54,49,56,51,51,49,57,44,32,45,48,46,52,55,52,56,54,51,54,55,56,50,49,
 54,57,51,52,50,93,125,0,0 };
 
-const char* _2_model_json = (const char*) temp_binary_data_0;
+const char* two_model_json = (const char*) temp_binary_data_0;
 
 }
 
@@ -104387,13 +104387,13 @@ const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
 
     switch (hash)
     {
-        case 0xc1a4484a:  numBytes = 8765472; return _2_model_json;
-        case 0xc955eda9:  numBytes = 8765053; return _3_model_json;
-        case 0xd8b93867:  numBytes = 8680122; return _5_model_json;
-        case 0xf77fcde3:  numBytes = 8733404; return _9_model_json;
-        case 0x69c163c2:  numBytes = 8919468; return _51_model_json;
-        case 0x122201fd:  numBytes = 8808000; return csd_16000_model_json;
-        case 0xe4fe90b7:  numBytes = 8984885; return csd_44100_model_json;
+        case 0x4bc0a811:  numBytes = 8765472; return two_model_json;
+        case 0x2d19dd7f:  numBytes = 8765053; return three_model_json;
+        case 0x2931d7eb:  numBytes = 8680122; return five_model_json;
+        case 0x83f4f5eb:  numBytes = 8733404; return nine_model_json;
+        case 0x3194799c:  numBytes = 8919468; return all_model_json;
+        case 0xbc6797b4:  numBytes = 8808000; return csd_low_model_json;
+        case 0x0838aab0:  numBytes = 8984885; return csd_high_model_json;
         case 0x7d743c3e:  numBytes = 6461894; return model_json;
         case 0x09d0f0a9:  numBytes = 6461869; return model_csd_json;
         default: break;
@@ -104405,26 +104405,26 @@ const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
 
 const char* namedResourceList[] =
 {
-    "_2_model_json",
-    "_3_model_json",
-    "_5_model_json",
-    "_9_model_json",
-    "_51_model_json",
-    "csd_16000_model_json",
-    "csd_44100_model_json",
+    "two_model_json",
+    "three_model_json",
+    "five_model_json",
+    "nine_model_json",
+    "all_model_json",
+    "csd_low_model_json",
+    "csd_high_model_json",
     "model_json",
     "model_csd_json"
 };
 
 const char* originalFilenames[] =
 {
-    "2_model.json",
-    "3_model.json",
-    "5_model.json",
-    "9_model.json",
-    "51_model.json",
-    "csd_16000_model.json",
-    "csd_44100_model.json",
+    "two_model.json",
+    "three_model.json",
+    "five_model.json",
+    "nine_model.json",
+    "all_model.json",
+    "csd_low_model.json",
+    "csd_high_model.json",
     "model.json",
     "model_csd.json"
 };
