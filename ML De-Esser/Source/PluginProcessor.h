@@ -111,6 +111,8 @@ private:
 
     juce::LinearSmoothedValue<float> smoothedGain{ 1.0f };
 
+    bool sibilantSoundDetected = false;
+
     // NN privates
 
     static constexpr int modelWindowSize = 512;
@@ -149,7 +151,7 @@ private:
     std::atomic<int> predictedClassIndex{ 0 };
 
     void loadModelWeights();
-    void runInference(const float* sampleBlock);
+    bool runInference(const float* sampleBlock);
 
     juce::dsp::ProcessorDuplicator<FilterType, FilterCoefs> highCutFilter;
 

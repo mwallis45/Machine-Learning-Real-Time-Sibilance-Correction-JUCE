@@ -141,26 +141,16 @@ void MLDeEsserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
     *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, 10000.0f);
 
-    smoothedGain.reset(50); // Set to 50 samples
+    smoothedGain.reset(128); // Set to 128 samples
     smoothedGain.setCurrentAndTargetValue(1.0f);
 
     // NN Pre processing
 
-    inputFifoBuffer.setSize(1, modelWindowSize);
+    inputFifoBuffer.setSize(1, modelWindowSize * 2); // Set buffer to be twice the size so we can have the delayed audio aswell
     inputFifoBuffer.clear();
     fifoWriteIndex = 0;
     samplesSinceLastHop = 0;
     std::fill(inputAllocationBlock.begin(), inputAllocationBlock.end(), 0.0f); // std::fill(modelInputVector.begin(), modelInputVector.end(), 0.0f);
-
-    int totalSamplesNeeded = samplesPerBlock;
-
-    if (samplesPerBlock < 512) {
-        totalSamplesNeeded = 512;
-    }
-
-    delayLineBuffer.setSize(getTotalNumOutputChannels(), totalSamplesNeeded);
-    delayLineBuffer.clear();
-    delayWriteIndex = 0;
 
     setLatencySamples(delayLengthSamples);
 
@@ -168,7 +158,7 @@ void MLDeEsserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
         neuralModel->reset();
     }
 
-    // classifier.reset();
+    sibilantSoundDetected = false;
 
 }
 
@@ -264,9 +254,8 @@ void MLDeEsserAudioProcessor::loadModelWeights()
     loadDense<float>(state_dict, "fc3.", neuralModel->get<4>());
 }
 
-void MLDeEsserAudioProcessor::runInference(const float* sampleBlock)
+bool MLDeEsserAudioProcessor::runInference(const float* sampleBlock)
 {
-
     neuralModel->forward(sampleBlock);
     const float* outputProbs = neuralModel->getOutputs();
     int bestClass = 0;
@@ -280,10 +269,14 @@ void MLDeEsserAudioProcessor::runInference(const float* sampleBlock)
             bestClass = i;
         }
     }
-    predictedClassIndex.store(bestClass, std::memory_order_relaxed);
 
+    bool sibilantSoundDetected = (bestClass == 1); // 2 class
+    // bool sibilantSoundDetected = (currentClass == 1 || currentClass == 2); // 3 class
+    // bool sibilantSoundDetected = (currentClass == 3 || currentClass == 4); // 5 class
+    // bool sibilantSoundDetected = (currentClass >= 1 && currentClass <= 8); // 9 class
+    // bool sibilantSoundDetected = (currentClass == 20 || currentClass == 27 || currentClass == 31 || currentClass == 40 || currentClass == 41 || currentClass == 42 || currentClass == 43 || currentClass == 49); // 51 class
+    return sibilantSoundDetected;
 }
-
 
 void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
@@ -291,87 +284,51 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-
+    bool isPluginEnabled = enabledParameter->load() > 0.5f;
     int numSamples = buffer.getNumSamples();
-    bool sibilantSoundDetected = false;
+    *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), cutoffParameter->load());
 
     for (int sample = 0; sample < numSamples; ++sample) {
-        float incomingSample = buffer.getSample(0, sample);
+        float incomingSample = buffer.getSample(0, sample); // Get sample from the first channel
 
-        inputFifoBuffer.setSample(0, fifoWriteIndex, incomingSample);
-        fifoWriteIndex = (fifoWriteIndex + 1) % modelWindowSize;
-
+        inputFifoBuffer.setSample(0, fifoWriteIndex, incomingSample); // Write the sample to the FIFO index
+        fifoWriteIndex = (fifoWriteIndex + 1) % (modelWindowSize * 2); // Increase and mod for 1024 samples
         samplesSinceLastHop++;
 
-        if (samplesSinceLastHop >= hopSize) {
-            samplesSinceLastHop = 0;
+        if (samplesSinceLastHop >= hopSize) { // Process chunk every 128 samples
+            samplesSinceLastHop = 0; 
 
-            int readIdx = fifoWriteIndex;
+            int readIdx = (fifoWriteIndex + modelWindowSize) % (modelWindowSize * 2); // start 512 samples back | Look at old 384 samples with new 128 samples
             for (int i = 0; i < modelWindowSize; ++i) {
                 inputAllocationBlock[i] = inputFifoBuffer.getSample(0, readIdx);
-                readIdx = (readIdx + 1) % modelWindowSize;
+                readIdx = (readIdx + 1) % (modelWindowSize * 2); // Needs to allow for the full buffer
             }
-
-            runInference(inputAllocationBlock.data());
-
+            sibilantSoundDetected = runInference(inputAllocationBlock.data());
         }
-
-        int currentClass = predictedClassIndex.load(std::memory_order_relaxed);
-        sibilantSoundDetected = (currentClass == 1); // 2 class
-        // isSibilantSound = (currentClass == 1 || currentClass == 2); // 3 class
-        // isSibilantSound = (currentClass == 3 || currentClass == 4); // 5 class
-        // isSibilantSound = (currentClass >= 1 && currentClass <= 8); // 9 class
-        // isSibilantSound = (currentClass == 20 || currentClass == 27 || currentClass == 31 || currentClass == 40 || currentClass == 41 || currentClass == 42 || currentClass == 43 || currentClass == 49); // 51 class
-
-        bool isPluginEnabled = (enabledParameter->load() > 0.5f);
-        bool shouldProcess = isPluginEnabled && sibilantSoundDetected;
 
         float targetGain = 1.0f;
-        if (shouldProcess) {
+        if (sibilantSoundDetected && isPluginEnabled) {
             targetGain = juce::Decibels::decibelsToGain(-gainParamater->load());
         }
+
         smoothedGain.setTargetValue(targetGain);
         float currentGain = smoothedGain.getNextValue();
-
         for (int channel = 0; channel < totalNumInputChannels; ++channel) {
-            float liveSample = buffer.getSample(channel, sample);
-            float delayedSample = delayLineBuffer.getSample(channel, delayWriteIndex);
-            delayLineBuffer.setSample(channel, delayWriteIndex, liveSample);
+            int readIdx = (fifoWriteIndex) % (modelWindowSize * 2);
+            float delayedSample = inputFifoBuffer.getSample(channel, readIdx);
 
             delayedSample *= currentGain;
-
             buffer.setSample(channel, sample, delayedSample);
-
         }
-
-        delayWriteIndex = (delayWriteIndex + 1) % delayLengthSamples;
-
     }
-
-    bool lastSampleActive = (enabledParameter->load() > 0.5f) && sibilantSoundDetected;
-
-    if (lastSampleActive) {
-        *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), cutoffParameter->load());
+   /* if (sibilantSoundDetected && isPluginEnabled) {
         juce::dsp::AudioBlock<float> audioBlock(buffer);
         juce::dsp::ProcessContextReplacing<float> context(audioBlock);
         highCutFilter.process(context);
-    }
-
+    }*/
 }
 
 //==============================================================================
