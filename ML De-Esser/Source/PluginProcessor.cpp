@@ -55,6 +55,11 @@ MLDeEsserAudioProcessor::MLDeEsserAudioProcessor()
 
 MLDeEsserAudioProcessor::~MLDeEsserAudioProcessor()
 {
+    suspendProcessing(true);
+
+    if (neuralModel != nullptr) {
+        neuralModel->reset();
+    }
 }
 
 //==============================================================================
@@ -147,7 +152,13 @@ void MLDeEsserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     samplesSinceLastHop = 0;
     std::fill(inputAllocationBlock.begin(), inputAllocationBlock.end(), 0.0f); // std::fill(modelInputVector.begin(), modelInputVector.end(), 0.0f);
 
-    delayLineBuffer.setSize(getTotalNumOutputChannels(), delayLengthSamples / 2);
+    int totalSamplesNeeded = samplesPerBlock;
+
+    if (samplesPerBlock < 512) {
+        totalSamplesNeeded = 512;
+    }
+
+    delayLineBuffer.setSize(getTotalNumOutputChannels(), totalSamplesNeeded);
     delayLineBuffer.clear();
     delayWriteIndex = 0;
 
@@ -196,76 +207,61 @@ bool MLDeEsserAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 
 void MLDeEsserAudioProcessor::loadModelWeights()
 {
-
-    if (BinaryData::model_json != nullptr && BinaryData::model_jsonSize > 0)
-    {
-        nlohmann::json state_dict = nullptr;
-
-        // 2 class
-        if (true) {
-            nlohmann::json state_dict = nlohmann::json::parse(
-                BinaryData::two_model_json,
-                BinaryData::two_model_json + BinaryData::two_model_jsonSize
-            );
+    // Helper lambda to safely parse binary JSON data
+    auto parseBinaryJson = [](const char* data, int size) -> nlohmann::json {
+        if (data == nullptr || size <= 0) {
+            jassertfalse;
+            return nullptr;
         }
 
-        // 3 class
-        if (true) {
-            nlohmann::json state_dict = nlohmann::json::parse(
-                BinaryData::three_model_json,
-                BinaryData::three_model_json + BinaryData::three_model_jsonSize
-            );
+        try {
+            return nlohmann::json::parse(data, data + size);
         }
-
-        // 5 class
-        if (true) {
-            nlohmann::json state_dict = nlohmann::json::parse(
-                BinaryData::five_model_json,
-                BinaryData::five_model_json + BinaryData::five_model_jsonSize
-            );
+        catch (const nlohmann::json::parse_error& e) {
+            jassertfalse; // Traceable in debug builds
+            DBG("Failed to parse model JSON: " << e.what());
+            return nullptr;
         }
+        };
 
-        // 9 class
-        if (true) {
-            nlohmann::json state_dict = nlohmann::json::parse(
-                BinaryData::nine_model_json,
-                BinaryData::nine_model_json + BinaryData::nine_model_jsonSize
-            );
-        }
+    // 2 class
+    const char* activeData = BinaryData::two_model_json;
+    int activeSize = BinaryData::two_model_jsonSize;
 
-        // 51 class
-        if (true) {
-            nlohmann::json state_dict = nlohmann::json::parse(
-                BinaryData::all_model_json,
-                BinaryData::all_model_json + BinaryData::all_model_jsonSize
-            );
-        }
+    // 3 class
+    /*const char* activeData = BinaryData::three_model_json;
+    int activeSize = BinaryData::three_model_jsonSize;*/
 
-        // csd 44100
-        if (true) {
-            nlohmann::json state_dict = nlohmann::json::parse(
-                BinaryData::csd_high_model_json,
-                BinaryData::csd_high_model_json + BinaryData::csd_high_model_jsonSize
-            );
-        }
+    // 5 class
+    /*const char* activeData = BinaryData::five_model_json;
+    int activeSize = BinaryData::five_model_jsonSize;*/
 
-        // csd 16000
-        if (true) {
-            nlohmann::json state_dict = nlohmann::json::parse(
-                BinaryData::csd_low_model_json,
-                BinaryData::csd_low_model_json + BinaryData::csd_low_model_jsonSize
-            );
-        }
+    // 9 class
+    /*const char* activeData = BinaryData::nine_model_json;
+    int activeSize = BinaryData::nine_model_jsonSize;*/
 
-        using namespace RTNeural::torch_helpers;
-        loadDense<float>(state_dict, "fc1.", neuralModel->get<0>());
-        loadDense<float>(state_dict, "fc2.", neuralModel->get<2>());
-        loadDense<float>(state_dict, "fc3.", neuralModel->get<4>());
+    // 51 class
+    /*const char* activeData = BinaryData::all_model_json;
+    int activeSize = BinaryData::all_model_jsonSize;*/
+
+    // csd 44100
+    /*const char* activeData = BinaryData::csd_high_model_json;
+    int activeSize = BinaryData::csd_high_model_jsonSize;*/
+
+    // csd 16000
+    /*const char* activeData = BinaryData::csd_low_model_json;
+    int activeSize = BinaryData::csd_low_model_jsonSize;*/
+
+    nlohmann::json state_dict = parseBinaryJson(activeData, activeSize);
+
+    if (state_dict.is_null()) {
+        return;
     }
-    else
-    {
-        jassertfalse; // Execution drops here if the file wasn't bundled properly
-    }
+
+    using namespace RTNeural::torch_helpers;
+    loadDense<float>(state_dict, "fc1.", neuralModel->get<0>());
+    loadDense<float>(state_dict, "fc2.", neuralModel->get<2>());
+    loadDense<float>(state_dict, "fc3.", neuralModel->get<4>());
 }
 
 void MLDeEsserAudioProcessor::runInference(const float* sampleBlock)
@@ -312,6 +308,7 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // interleaved by keeping the same state.
 
     int numSamples = buffer.getNumSamples();
+    bool sibilantSoundDetected = false;
 
     for (int sample = 0; sample < numSamples; ++sample) {
         float incomingSample = buffer.getSample(0, sample);
@@ -335,10 +332,14 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         }
 
         int currentClass = predictedClassIndex.load(std::memory_order_relaxed);
-        bool isSibilantSound = (currentClass == 20 || currentClass == 27 || currentClass == 31 || currentClass == 40 || currentClass == 41 || currentClass == 42 || currentClass == 43 || currentClass == 49);
+        sibilantSoundDetected = (currentClass == 1); // 2 class
+        // isSibilantSound = (currentClass == 1 || currentClass == 2); // 3 class
+        // isSibilantSound = (currentClass == 3 || currentClass == 4); // 5 class
+        // isSibilantSound = (currentClass >= 1 && currentClass <= 8); // 9 class
+        // isSibilantSound = (currentClass == 20 || currentClass == 27 || currentClass == 31 || currentClass == 40 || currentClass == 41 || currentClass == 42 || currentClass == 43 || currentClass == 49); // 51 class
 
         bool isPluginEnabled = (enabledParameter->load() > 0.5f);
-        bool shouldProcess = isPluginEnabled && isSibilantSound; // bool shouldProcess = (enabledParameter->load() > 0.5f);
+        bool shouldProcess = isPluginEnabled && sibilantSoundDetected;
 
         float targetGain = 1.0f;
         if (shouldProcess) {
@@ -352,7 +353,6 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             float delayedSample = delayLineBuffer.getSample(channel, delayWriteIndex);
             delayLineBuffer.setSample(channel, delayWriteIndex, liveSample);
 
-
             delayedSample *= currentGain;
 
             buffer.setSample(channel, sample, delayedSample);
@@ -363,11 +363,7 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     }
 
-    bool lastSampleActive = (enabledParameter->load() > 0.5f) &&
-        [this]() {
-        int c = predictedClassIndex.load(std::memory_order_relaxed);
-        return (c == 20 || c == 27 || c == 31 || c == 40 || c == 41 || c == 42 || c == 43 || c == 49); // Must match your target classes above
-        }();
+    bool lastSampleActive = (enabledParameter->load() > 0.5f) && sibilantSoundDetected;
 
     if (lastSampleActive) {
         *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), cutoffParameter->load());

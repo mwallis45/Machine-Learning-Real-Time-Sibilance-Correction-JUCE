@@ -104369,12 +104369,6 @@ static const unsigned char temp_binary_data_0[] =
 
 const char* two_model_json = (const char*) temp_binary_data_0;
 
-}
-
-#include "BinaryData.h"
-
-namespace BinaryData
-{
 
 const char* getNamedResource (const char* resourceNameUTF8, int& numBytes);
 const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
@@ -104388,14 +104382,6 @@ const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
     switch (hash)
     {
         case 0x4bc0a811:  numBytes = 8765472; return two_model_json;
-        case 0x2d19dd7f:  numBytes = 8765053; return three_model_json;
-        case 0x2931d7eb:  numBytes = 8680122; return five_model_json;
-        case 0x83f4f5eb:  numBytes = 8733404; return nine_model_json;
-        case 0x3194799c:  numBytes = 8919468; return all_model_json;
-        case 0xbc6797b4:  numBytes = 8808000; return csd_low_model_json;
-        case 0x0838aab0:  numBytes = 8984885; return csd_high_model_json;
-        case 0x7d743c3e:  numBytes = 6461894; return model_json;
-        case 0x09d0f0a9:  numBytes = 6461869; return model_csd_json;
         default: break;
     }
 
@@ -104405,28 +104391,12 @@ const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
 
 const char* namedResourceList[] =
 {
-    "two_model_json",
-    "three_model_json",
-    "five_model_json",
-    "nine_model_json",
-    "all_model_json",
-    "csd_low_model_json",
-    "csd_high_model_json",
-    "model_json",
-    "model_csd_json"
+    "two_model_json"
 };
 
 const char* originalFilenames[] =
 {
-    "two_model.json",
-    "three_model.json",
-    "five_model.json",
-    "nine_model.json",
-    "all_model.json",
-    "csd_low_model.json",
-    "csd_high_model.json",
-    "model.json",
-    "model_csd.json"
+    "two_model.json"
 };
 
 const char* getNamedResourceOriginalFilename (const char* resourceNameUTF8);
