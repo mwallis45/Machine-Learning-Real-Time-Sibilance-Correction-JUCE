@@ -106,6 +106,17 @@ private:
     float gainReduction{ 0.0f };
     bool isProcessingEnabled{ true };
 
+    float currentGain = 1.0f;
+    float attackCoeff = 0.0f;
+    float releaseCoeff = 0.0f;
+
+    void updateSmoothingCoefficients(double sampleRate, float attackMs, float releaseMs)
+    {
+        // Exponential time constant formula: alpha = 1 - exp(-1 / (fs * time_in_seconds))
+        attackCoeff = 1.0f - std::exp(-1.0f / (static_cast<float>(sampleRate) * (attackMs / 1000.0f)));
+        releaseCoeff = 1.0f - std::exp(-1.0f / (static_cast<float>(sampleRate) * (releaseMs / 1000.0f)));
+    }
+
     using FilterType = juce::dsp::IIR::Filter<float>;
     using FilterCoefs = juce::dsp::IIR::Coefficients<float>;
 

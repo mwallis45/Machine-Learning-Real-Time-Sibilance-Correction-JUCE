@@ -141,18 +141,20 @@ void MLDeEsserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
     *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, 10000.0f);
 
-    smoothedGain.reset(128); // Set to 128 samples
+    smoothedGain.reset(256); // Set to 256 samples (5 ms)
     smoothedGain.setCurrentAndTargetValue(1.0f);
 
     // NN Pre processing
 
-    inputFifoBuffer.setSize(1, modelWindowSize * 2); // Set buffer to be twice the size so we can have the delayed audio aswell
+    inputFifoBuffer.setSize(getTotalNumOutputChannels(), modelWindowSize * 2); // Set buffer to be twice the size so we can have the delayed audio aswell
     inputFifoBuffer.clear();
     fifoWriteIndex = 0;
     samplesSinceLastHop = 0;
     std::fill(inputAllocationBlock.begin(), inputAllocationBlock.end(), 0.0f); // std::fill(modelInputVector.begin(), modelInputVector.end(), 0.0f);
 
     setLatencySamples(delayLengthSamples);
+
+    updateSmoothingCoefficients(sampleRate, 2.0f, 35.0f);
 
     if (neuralModel != nullptr) {
         neuralModel->reset();
@@ -292,9 +294,10 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), cutoffParameter->load());
 
     for (int sample = 0; sample < numSamples; ++sample) {
-        float incomingSample = buffer.getSample(0, sample); // Get sample from the first channel
-
-        inputFifoBuffer.setSample(0, fifoWriteIndex, incomingSample); // Write the sample to the FIFO index
+        for (int channel = 0; channel < totalNumInputChannels; ++channel) {
+            float incomingSample = buffer.getSample(channel, sample); // Get sample from the first channel
+            inputFifoBuffer.setSample(channel, fifoWriteIndex, incomingSample); // Write the sample to the FIFO index
+        }
         fifoWriteIndex = (fifoWriteIndex + 1) % (modelWindowSize * 2); // Increase and mod for 1024 samples
         samplesSinceLastHop++;
 
@@ -307,18 +310,25 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
                 readIdx = (readIdx + 1) % (modelWindowSize * 2); // Needs to allow for the full buffer
             }
             sibilantSoundDetected = runInference(inputAllocationBlock.data());
+
         }
 
         float targetGain = 1.0f;
         if (sibilantSoundDetected && isPluginEnabled) {
             targetGain = juce::Decibels::decibelsToGain(-gainParamater->load());
         }
-
         smoothedGain.setTargetValue(targetGain);
+
+        if (targetGain < currentGain) {
+            currentGain += attackCoeff * (targetGain - currentGain);
+        } else {
+            currentGain += releaseCoeff * (targetGain - currentGain);
+        }
+        
         float currentGain = smoothedGain.getNextValue();
         for (int channel = 0; channel < totalNumInputChannels; ++channel) {
-            int readIdx = (fifoWriteIndex) % (modelWindowSize * 2);
-            float delayedSample = inputFifoBuffer.getSample(channel, readIdx);
+            int readDelayIdx = (fifoWriteIndex + modelWindowSize) % (modelWindowSize * 2);
+            float delayedSample = inputFifoBuffer.getSample(channel, readDelayIdx);
 
             delayedSample *= currentGain;
             buffer.setSample(channel, sample, delayedSample);
