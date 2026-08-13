@@ -121,6 +121,7 @@ private:
     using FilterCoefs = juce::dsp::IIR::Coefficients<float>;
 
     juce::LinearSmoothedValue<float> smoothedGain{ 1.0f };
+    juce::LinearSmoothedValue<float> smoothedCutoff{ 1.0f };
 
     bool sibilantSoundDetected = false;
 
@@ -129,11 +130,11 @@ private:
     static constexpr int modelWindowSize = 512;
     static constexpr int hopSize = 128;
 
-    juce::AudioBuffer<float> inputFifoBuffer; // juce::AudioDataConverters::GenericBuffer<float> fifoBuffer;
-    int fifoWriteIndex = 0; // int fifoIndex = 0;
+    juce::AudioBuffer<float> inputFifoBuffer;
+    int fifoWriteIndex = 0;
     int samplesSinceLastHop = 0;
 
-    std::vector<float> inputAllocationBlock; // std::array<float, modelWindowSize> modelInputVector;
+    std::vector<float> inputAllocationBlock;
 
     static constexpr int delayLengthSamples = 512;
     juce::AudioBuffer<float> delayLineBuffer;
@@ -142,9 +143,6 @@ private:
     static constexpr int input_dim = 512;
     static constexpr int hidden_dim = 512;
     static constexpr int num_classes = 51;
-
-    // using GeluHidden = GeluActivationT<float, hidden_dim>;
-    // using GeluClasses = GeluActivationT<float, num_classes>;
 
     using ModelType = RTNeural::ModelT<float, input_dim, num_classes,
         RTNeural::DenseT<float, input_dim, hidden_dim>,

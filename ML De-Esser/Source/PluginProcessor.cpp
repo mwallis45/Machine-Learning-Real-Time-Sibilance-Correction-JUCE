@@ -144,6 +144,9 @@ void MLDeEsserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     smoothedGain.reset(256); // Set to 256 samples (5 ms)
     smoothedGain.setCurrentAndTargetValue(1.0f);
 
+    smoothedCutoff.reset(256); // Set to 256 samples (5 ms)
+    smoothedCutoff.setCurrentAndTargetValue(20000.0f); // Set to 20 kHz for defualt pass
+
     // NN Pre processing
 
     inputFifoBuffer.setSize(getTotalNumOutputChannels(), modelWindowSize * 2); // Set buffer to be twice the size so we can have the delayed audio aswell
@@ -199,7 +202,7 @@ bool MLDeEsserAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 
 void MLDeEsserAudioProcessor::loadModelWeights()
 {
-    // Helper lambda to safely parse binary JSON data
+    
     auto parseBinaryJson = [](const char* data, int size) -> nlohmann::json {
         if (data == nullptr || size <= 0) {
             jassertfalse;
@@ -210,7 +213,7 @@ void MLDeEsserAudioProcessor::loadModelWeights()
             return nlohmann::json::parse(data, data + size);
         }
         catch (const nlohmann::json::parse_error& e) {
-            jassertfalse; // Traceable in debug builds
+            jassertfalse;
             DBG("Failed to parse model JSON: " << e.what());
             return nullptr;
         }
@@ -291,7 +294,12 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     bool isPluginEnabled = enabledParameter->load() > 0.5f;
     int numSamples = buffer.getNumSamples();
-    *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), cutoffParameter->load());
+
+    float baseCutoff = cutoffParameter->load();
+    float targetCutoff = (sibilantSoundDetected && isPluginEnabled) ? baseCutoff : 20000.0f;
+
+    smoothedCutoff.setTargetValue(targetCutoff);
+    *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), targetCutoff);
 
     for (int sample = 0; sample < numSamples; ++sample) {
         for (int channel = 0; channel < totalNumInputChannels; ++channel) {
@@ -324,21 +332,24 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         } else {
             currentGain += releaseCoeff * (targetGain - currentGain);
         }
+
+        float currentCutoff = smoothedCutoff.getNextValue();
+        currentCutoff = juce::jlimit(20.0f, (float)getSampleRate() * 0.49f, currentCutoff);
+        auto newCoeffs = juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), currentCutoff);
         
         float currentGain = smoothedGain.getNextValue();
         for (int channel = 0; channel < totalNumInputChannels; ++channel) {
+            // Delay
             int readDelayIdx = (fifoWriteIndex + modelWindowSize) % (modelWindowSize * 2);
             float delayedSample = inputFifoBuffer.getSample(channel, readDelayIdx);
+
+            // High EQ
+            highCutFilter.process(readDelayIdx);
 
             delayedSample *= currentGain;
             buffer.setSample(channel, sample, delayedSample);
         }
     }
-   /* if (sibilantSoundDetected && isPluginEnabled) {
-        juce::dsp::AudioBlock<float> audioBlock(buffer);
-        juce::dsp::ProcessContextReplacing<float> context(audioBlock);
-        highCutFilter.process(context);
-    }*/
 }
 
 //==============================================================================
