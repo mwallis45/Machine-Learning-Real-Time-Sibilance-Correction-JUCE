@@ -162,7 +162,8 @@ private:
     void loadModelWeights();
     bool runInference(const float* sampleBlock);
 
-    juce::dsp::ProcessorDuplicator<FilterType, FilterCoefs> highCutFilter;
+    // juce::dsp::ProcessorDuplicator<FilterType, FilterCoefs> highCutFilter;
+    std::vector<FilterType> highCutFilters;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MLDeEsserAudioProcessor)

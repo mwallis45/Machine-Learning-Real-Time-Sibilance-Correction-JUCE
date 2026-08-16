@@ -132,14 +132,20 @@ void MLDeEsserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
     // DSP Pre processing
 
+
+    int numChannels = juce::jmin(2, getTotalNumInputChannels());
+    highCutFilters.resize(numChannels);
+
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
-    spec.numChannels = getTotalNumOutputChannels();
+    spec.numChannels = numChannels;
 
-    highCutFilter.prepare(spec);
-
-    *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, 10000.0f);
+    for (auto& filter : highCutFilters)
+    {
+        filter.prepare(spec);
+        filter.reset();
+    }
 
     smoothedGain.reset(256); // Set to 256 samples (5 ms)
     smoothedGain.setCurrentAndTargetValue(1.0f);
@@ -298,8 +304,10 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     float baseCutoff = cutoffParameter->load();
     float targetCutoff = (sibilantSoundDetected && isPluginEnabled) ? baseCutoff : 20000.0f;
 
-    smoothedCutoff.setTargetValue(targetCutoff);
-    *highCutFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), targetCutoff);
+    float currentCutoff = smoothedCutoff.getNextValue();
+    currentCutoff = juce::jlimit(20.0f, (float)getSampleRate() * 0.49f, currentCutoff);
+    auto newCoeffs = juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), currentCutoff);
+
 
     for (int sample = 0; sample < numSamples; ++sample) {
         for (int channel = 0; channel < totalNumInputChannels; ++channel) {
@@ -332,10 +340,6 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         } else {
             currentGain += releaseCoeff * (targetGain - currentGain);
         }
-
-        float currentCutoff = smoothedCutoff.getNextValue();
-        currentCutoff = juce::jlimit(20.0f, (float)getSampleRate() * 0.49f, currentCutoff);
-        auto newCoeffs = juce::dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), currentCutoff);
         
         float currentGain = smoothedGain.getNextValue();
         for (int channel = 0; channel < totalNumInputChannels; ++channel) {
@@ -343,10 +347,12 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             int readDelayIdx = (fifoWriteIndex + modelWindowSize) % (modelWindowSize * 2);
             float delayedSample = inputFifoBuffer.getSample(channel, readDelayIdx);
 
-            // High EQ
-            highCutFilter.process(readDelayIdx);
-
             delayedSample *= currentGain;
+
+            // High EQ
+            highCutFilters[channel].coefficients = newCoeffs;
+            delayedSample = highCutFilters[channel].processSample(delayedSample);
+            
             buffer.setSample(channel, sample, delayedSample);
         }
     }
@@ -355,7 +361,7 @@ void MLDeEsserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 //==============================================================================
 bool MLDeEsserAudioProcessor::hasEditor() const
 {
-    return true; // (change this to false if you choose to not supply an editor)
+    return false; // (change this to false if you choose to not supply an editor)
 }
 
 juce::AudioProcessorEditor* MLDeEsserAudioProcessor::createEditor()
