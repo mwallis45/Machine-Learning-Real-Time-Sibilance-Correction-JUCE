@@ -8,8 +8,8 @@
 
 namespace BinaryData
 {
-    extern const char*   two_model_json;
-    const int            two_model_jsonSize = 8765472;
+    extern const char*   csd_low_model_json;
+    const int            csd_low_model_jsonSize = 8808000;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
     const int namedResourceListSize = 1;

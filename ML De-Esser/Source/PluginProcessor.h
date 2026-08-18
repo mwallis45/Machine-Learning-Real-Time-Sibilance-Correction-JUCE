@@ -6,43 +6,19 @@
   ==============================================================================
 */
 
+/*
+    AI decleration for this code:
+
+    Gemini was used in the PluginProcessor.cpp file which would influence the items
+    in this file. One main point that was gemini made is the RTNural parts as I didn't
+    have any experience with you this.
+*/
+
 #pragma once
 
 #include <JuceHeader.h>
 #include "RTNeural/RTNeural.h"
 #include <cmath>
-
-
-//template <typename T, int size>
-//class GeluActivationT
-//{
-//public:
-//    static constexpr auto in_size = size;
-//    static constexpr auto out_size = size;
-//
-//    GeluActivationT() = default;
-//
-//    std::string getName() const noexcept { return "gelu"; }
-//    constexpr bool isActivation() const noexcept { return true; }
-//    RTNEURAL_REALTIME void reset() {}
-//
-//    RTNEURAL_REALTIME inline void forward(const T(&ins)[size]) noexcept
-//    {
-//        constexpr T sqrt_2_over_pi = (T)0.7978845608; // sqrt(2 / pi)
-//
-//        for (int i = 0; i < size; ++i)
-//        {
-//            const T x = ins[i];
-//            // Fast Tanh Gelu Approximation Formula
-//            const T intermediate = sqrt_2_over_pi * (x + (T)0.044715 * x * x * x);
-//            outs[i] = (T)0.5 * x * ((T)1.0 + std::tanh(intermediate));
-//        }
-//    }
-//
-//    // Allocate internal output storage matching RTNeural's memory alignments
-//    T outs alignas(RTNEURAL_DEFAULT_ALIGNMENT)[size];
-//};
-
 
 //==============================================================================
 /**
@@ -147,10 +123,8 @@ private:
     using ModelType = RTNeural::ModelT<float, input_dim, num_classes,
         RTNeural::DenseT<float, input_dim, hidden_dim>,
         RTNeural::ReLuActivationT<float, hidden_dim>,
-        // GeluHidden,
         RTNeural::DenseT<float, hidden_dim, num_classes>,
         RTNeural::ReLuActivationT<float, num_classes>,
-        // GeluClasses,
         RTNeural::DenseT<float, num_classes, num_classes>,
         RTNeural::SoftmaxActivationT<float, num_classes>
     >;
@@ -162,7 +136,6 @@ private:
     void loadModelWeights();
     bool runInference(const float* sampleBlock);
 
-    // juce::dsp::ProcessorDuplicator<FilterType, FilterCoefs> highCutFilter;
     std::vector<FilterType> highCutFilters;
 
     //==============================================================================

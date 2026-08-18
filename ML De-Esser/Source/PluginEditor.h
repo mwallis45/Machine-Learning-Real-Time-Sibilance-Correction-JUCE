@@ -6,6 +6,12 @@
   ==============================================================================
 */
 
+/*
+    AI decleration for this code:
+
+    AI was not used in the making of this code
+*/
+
 #pragma once
 
 #include <JuceHeader.h>

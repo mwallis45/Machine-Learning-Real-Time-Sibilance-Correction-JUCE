@@ -6,6 +6,12 @@
   ==============================================================================
 */
 
+/*
+    AI decleration for this code:
+
+    AI was not used in the making of this code
+*/
+
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -26,27 +32,24 @@ MLDeEsserAudioProcessorEditor::MLDeEsserAudioProcessorEditor (MLDeEsserAudioProc
     // editor's size to whatever you need it to be.
     setSize (400, 300);
 
-    // --- Style & Setup Cutoff Slider ---
+    // High Cut
     cutoffSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     cutoffSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 70, 20);
     addAndMakeVisible(cutoffSlider);
 
-    // Connect Cutoff Slider to APVTS via ID "HPF_CUTOFF"
     cutoffAttachment = std::make_unique<SliderAttachment>(audioProcessor.getAPVTS(), "HCF_CUTOFF", cutoffSlider);
 
-    // --- Style & Setup Gain Slider ---
+    // Gain Slider
     gainSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     gainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 70, 20);
     addAndMakeVisible(gainSlider);
 
-    // Connect Gain Slider to APVTS via ID "GAIN_RED"
     gainAttachment = std::make_unique<SliderAttachment>(audioProcessor.getAPVTS(), "GAIN_RED", gainSlider);
 
-    // --- Style & Setup Toggle Button ---
+    // Enable Toggle
     enabledToggle.setButtonText("FX Enabled");
     addAndMakeVisible(enabledToggle);
 
-    // Connect Toggle to APVTS via ID "PROCESS_ON"
     toggleAttachment = std::make_unique<ButtonAttachment>(audioProcessor.getAPVTS(), "PROCESS_ON", enabledToggle);
 
 }
@@ -58,7 +61,6 @@ MLDeEsserAudioProcessorEditor::~MLDeEsserAudioProcessorEditor()
 //==============================================================================
 void MLDeEsserAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 
     g.setColour(juce::Colours::white);
