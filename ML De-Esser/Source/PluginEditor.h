@@ -6,6 +6,12 @@
   ==============================================================================
 */
 
+/*
+    AI decleration for this code:
+
+    AI was not used in the making of this code
+*/
+
 #pragma once
 
 #include <JuceHeader.h>
@@ -31,6 +37,17 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     MLDeEsserAudioProcessor& audioProcessor;
+
+    juce::Slider cutoffSlider;
+    juce::Slider gainSlider;
+    juce::ToggleButton enabledToggle;
+
+    using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
+
+    std::unique_ptr<SliderAttachment> cutoffAttachment;
+    std::unique_ptr<SliderAttachment> gainAttachment;
+    std::unique_ptr<ButtonAttachment> toggleAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MLDeEsserAudioProcessorEditor)
 };
