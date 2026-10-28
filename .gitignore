@@ -3,9 +3,13 @@
 
 # Block the entire JUCE build output directory
 **/Builds/
+**/JuceLibraryCode/
+**/modules/
 
 # Block common VS lock files and index files
 *.vsidx
 *.suo
 *.user
 *.db
+
+ML De-Esser.jucer
