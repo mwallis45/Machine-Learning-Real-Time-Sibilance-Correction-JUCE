@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML DeEsser Github</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="top-bar">
+        <div class="site-title">Michael Wallis - ML DeEsser</div>
+
+        <div class="top-bar-controls">
+            <a href="https://mwallis45.github.io/My-Portfolio/" class="home-button">
+                Main Page
+            </a>
+
+            <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark and Light Mode">
+                Dark Mode
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <div class="doc-card">
+            <h1>ML DeEsser Documentation</h1>
+            <p class="author-subtitle">Maintained by Michael Wallis — Audio Programmer</p>
+
+            <h2>Overview</h2>
+            <p>This project looked at implementing a real time phonetic detection model to apply vocal correction DSP. This looked at a simple NN with a 512 window size with a step size of 128 samples, going down to a final classification of classes 51, 9, 5, 3 or 2. For full information, check the full report document but bare in mind that it is not peer reviewed and has places for improvement</p>  
+            <p>Created at Queen Mary University of London, for the final disertation Module.</p>
+
+            <h2>Quick Links</h2>
+            <ul>
+                <li>Source Code on <a href="https://github.com/mwallis45/Machine-Learning-Real-Time-Sibilance-Correction-JUCE" style="color: var(--alt-secondary-colour);">GitHub</a></li>
+            </ul>
+
+            <h2>Information</h2>
+            <p>
+                This project was able to show the benifit of 3 class classification models for sibilance correction.
+            </p>
+            <p>
+                Places that need improving for this project:
+            </p>
+            <ul>
+                <li>RNN instead of a NN to allow for history to help improve accuracy.</li>
+                <li>Better EQ application to audio buffer.</li>
+                <li>GUI interface for better feedback to the user.</li>
+            </ul>
+        </div>
+
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
