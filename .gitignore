@@ -4,6 +4,7 @@
 # Block the entire JUCE build output directory
 **/Builds/
 **/JuceLibraryCode/
+**/modules/
 
 # Block common VS lock files and index files
 *.vsidx
@@ -12,4 +13,3 @@
 *.db
 
 ML De-Esser/ML De-Esser.jucer
-ML De-Esser/modules/RTNeural/
