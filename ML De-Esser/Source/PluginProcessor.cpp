@@ -255,8 +255,8 @@ void MLDeEsserAudioProcessor::loadModelWeights()
     int activeSize = BinaryData::two_model_jsonSize;*/
 
     // 3 class
-    /*const char* activeData = BinaryData::three_model_json;
-    int activeSize = BinaryData::three_model_jsonSize;*/
+    const char* activeData = BinaryData::three_model_json;
+    int activeSize = BinaryData::three_model_jsonSize;
 
     // 5 class
     /*const char* activeData = BinaryData::five_model_json;
@@ -275,8 +275,8 @@ void MLDeEsserAudioProcessor::loadModelWeights()
     int activeSize = BinaryData::csd_high_model_jsonSize;*/
 
     // csd 16000
-    const char* activeData = BinaryData::csd_low_model_json;
-    int activeSize = BinaryData::csd_low_model_jsonSize;
+    /*const char* activeData = BinaryData::csd_low_model_json;
+    int activeSize = BinaryData::csd_low_model_jsonSize;*/
 
     nlohmann::json state_dict = parseBinaryJson(activeData, activeSize);
 
@@ -309,8 +309,8 @@ bool MLDeEsserAudioProcessor::runInference(const float* sampleBlock)
         }
     }
 
-    bool sibilantSoundDetected = (bestClass == 1); // 2 class
-    // bool sibilantSoundDetected = (bestClass == 1 || bestClass == 2); // 3 class
+    // bool sibilantSoundDetected = (bestClass == 1); // 2 class
+    bool sibilantSoundDetected = (bestClass == 1 || bestClass == 2); // 3 class
     // bool sibilantSoundDetected = (bestClass == 3 || bestClass == 4); // 5 class
     // bool sibilantSoundDetected = (bestClass >= 1 && bestClass <= 8); // 9 class
     // bool sibilantSoundDetected = (bestClass == 20 || bestClass == 27 || bestClass == 31 || bestClass == 40 || bestClass == 41 || bestClass == 42 || bestClass == 43 || bestClass == 49); // 51 class
