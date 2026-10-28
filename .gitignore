@@ -3,6 +3,7 @@
 
 # Block the entire JUCE build output directory
 **/Builds/
+**/JuceLibraryCode/
 
 # Block common VS lock files and index files
 *.vsidx
