@@ -65,8 +65,8 @@ If you reference or build upon this project for academic or research work, pleas
 
 ## Roadmap
 
-    [ ] Transition model architecture from standard NN to RNN / LSTM for better dynamic tracking.
+[ ] Transition model architecture from standard NN to RNN / LSTM for better dynamic tracking.
 
-    [ ] Improve DSP smoothing filter algorithms to minimize processing artifacts.
+[ ] Improve DSP smoothing filter algorithms to minimize processing artifacts.
 
 *Last Updated: October 29, 2026*

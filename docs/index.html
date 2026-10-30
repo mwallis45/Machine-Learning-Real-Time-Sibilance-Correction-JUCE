@@ -28,8 +28,8 @@
             <p class="author-subtitle">Maintained by Michael Wallis — Audio Programmer</p>
 
             <h2>Overview</h2>
-            <p>This project looked at implementing a real time phonetic detection model to apply vocal correction DSP. This looked at a simple NN with a 512 window size with a step size of 128 samples, going down to a final classification of classes 51, 9, 5, 3 or 2. For full information, check the full report document but bare in mind that it is not peer reviewed and has places for improvement</p>  
-            <p>Created at Queen Mary University of London, for the final disertation Module.</p>
+            <p>A real-time audio plugin that uses machine learning for phonetic classification to selectively apply corrective DSP to sibilant frequencies. Created as part of a Master's Dissertation project at Queen Mary University of London (QMUL).</p>  
+            <p>Current Status: v1.0 (Testing & Academic Documentation)</p>
 
             <h2>Quick Links</h2>
             <ul>
@@ -37,17 +37,19 @@
             </ul>
 
             <h2>Information</h2>
-            <p>
-                This project was able to show the benifit of 3 class classification models for sibilance correction.
-            </p>
-            <p>
-                Places that need improving for this project:
-            </p>
-            <ul>
-                <li>RNN instead of a NN to allow for history to help improve accuracy.</li>
-                <li>Better EQ application to audio buffer.</li>
-                <li>GUI interface for better feedback to the user.</li>
-            </ul>
+            <p>The main idea behind this project is to use machine learning classification to detect phonetics. Phonetics are the smallest level of spoken language which togeather form letters then words. To increase speed we perform waveform detection instead of parsing the audio into a different format, meaning our input was 512 audio samples. We would then colapse this into a our final output layer or classes [51, 9, 5, 3, or 2]</p>
+            <img src="/docs/img/final_project_model_diagram.drawio.png" alt="Machine Learning classification model." class="img">
+
+            <h2>Citation & Licensing</h2>
+            <p>This project's code is licensed under the MIT License. If you reference or build upon this project for academic or research work, please cite:</p>
+            <p class="quotes">Michael W., ML De-Esser, Master's Dissertation, Queen Mary University of London (August 19, 2025).</p>
+            <h3>Important Licensing Note on Models:</h3>
+            <p>The model was trained on academic datasets. Models provided within this repository are released strictly for academic study, testing, and documentation purposes. Commercial use of the pre-trained weights is not permitted due to dataset copyright restrictions.</p>
+
+
+            <h2>Roadmap</h2>
+            <p class="roadmap">[ ] Transition model architecture from standard NN to RNN / LSTM for better dynamic tracking.</p>
+            <p class="roadmap">[ ] Improve DSP smoothing filter algorithms to minimize processing artifacts.</p>
         </div>
 
     </main>
